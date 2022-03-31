@@ -2,17 +2,19 @@
 #include <stdio.h>
 #include <string.h>
 
+
 #include "map.h"
 
 /* Recommended compile commmand:
  * 
+ 
  * gcc -Wall -Wextra -std=gnu99 -pedantic -g main.c map.c
  *
  * Recommended way to test your solution:
  *
  * valgrind --tool=memcheck ./a.out
  */
-#error Read comments above, then remove this line.
+//#error Read comments above, then remove this line.
 
 
 /* Can be used to inform compiler about unused parameters (prevent
@@ -44,7 +46,7 @@ void print_less(key_t k UNUSED, value_t v, int aux)
 }
 
 
-#define LOOPS 10
+#define LOOPS 4
 
 char* my_strdup(char* str)
 {
@@ -61,7 +63,7 @@ char* my_strdup(char* str)
 int main()
 {
   struct map container;
-  char input_buffer[10];
+  char input_buffer[3];
   char* obj;
   int id;
   int i;
@@ -80,22 +82,23 @@ int main()
     obj = my_strdup(input_buffer);
     id = map_insert(&container, obj);
   }
-
+    print(&container);
   /* remember to test with invalid keys (like 4711, or -1) */
-  for ( i = 0; i < LOOPS; ++i)
-  {
-    printf("Enter id to find value for: ");
-    scanf("%d", &id);
+  // for ( i = 0; i < LOOPS; ++i)
+  // {
+  //   printf("Enter id to find value for: ");
+  //   scanf("%d", &id);
 
-    /*! find the value for a key in the map */
-    obj = map_find(&container, id);
-
+  //   /*! find the value for a key in the map */
+  //   obj = map_find(&container, id);
+  //   printf("Gigga nigga %s\n", obj);
+  // }
     /*! if it was found, display it */
-YOUR CODE
+// YOUR CODE
   
     /* since we leave the value in the map we may use it again and
      * should not free the memory */
-  }
+  
 
   /* remember to test with invalid keys (like 4711, or -1) */
   for ( i = 0; i < LOOPS; ++i)
@@ -105,20 +108,21 @@ YOUR CODE
     
     /*! find and remove a value for a key in the map */
     obj = map_remove(&container, id);
+    print(&container);
 
     /*! if it was found, display it */
-YOUR CODE
+//YOUR CODE
     /* since we removed the value from the map we will never use it again and
      * must properly free the memory (if it was allocated) */
   }
 
-  /*! print all strings representing an integer less than N */
-  printf("Will now display all values less than N. Choose N: ");
-  scanf("%d", &i);
-  map_for_each(&container, print_less, i);
+//   /*! print all strings representing an integer less than N */
+//   printf("Will now display all values less than N. Choose N: ");
+//   scanf("%d", &i);
+//   map_for_each(&container, print_less, i);
   
-  /*! free all remaining memory and remove from map */
-  map_remove_if(&container, do_free, 0);
+//   /*! free all remaining memory and remove from map */
+//   map_remove_if(&container, do_free, 0);
   
   return 0;
 }
