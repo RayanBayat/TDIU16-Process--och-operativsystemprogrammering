@@ -40,7 +40,18 @@ const int argc[] = {
   /* extended, you may need to change the order of these two (plist, sleep) */
   0, 1
 };
-
+static void sys_halt(void)
+{
+  //printf("System Call Halt\n");
+  power_off();
+}
+static void sys_exit(int status)
+{
+  //printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
+  //printf("Status: %d\n", status);
+  process_exit(status);
+  thread_exit();
+}
 static void
 syscall_handler (struct intr_frame *f) 
 {
