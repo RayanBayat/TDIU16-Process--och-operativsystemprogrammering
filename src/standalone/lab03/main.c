@@ -43,10 +43,11 @@ void print_less(key_t k UNUSED, value_t v, int aux)
   {
     printf("%s ", v);
   }
+  
 }
 
 
-#define LOOPS 4
+#define LOOPS 10
 
 char* my_strdup(char* str)
 {
@@ -63,7 +64,7 @@ char* my_strdup(char* str)
 int main()
 {
   struct map container;
-  char input_buffer[3];
+  char input_buffer[30];
   char* obj;
   int id;
   int i;
@@ -82,47 +83,52 @@ int main()
     obj = my_strdup(input_buffer);
     id = map_insert(&container, obj);
   }
-    print(&container);
-  /* remember to test with invalid keys (like 4711, or -1) */
-  // for ( i = 0; i < LOOPS; ++i)
-  // {
-  //   printf("Enter id to find value for: ");
-  //   scanf("%d", &id);
-
-  //   /*! find the value for a key in the map */
-  //   obj = map_find(&container, id);
-  //   printf("Gigga nigga %s\n", obj);
-  // }
-    /*! if it was found, display it */
-// YOUR CODE
   
-    /* since we leave the value in the map we may use it again and
-     * should not free the memory */
+  /* remember to test with invalid keys (like 4711, or -1) */
+//   for ( i = 0; i < LOOPS; ++i)
+//   {
+//     printf("Enter id to find value for: ");
+//     scanf("%d", &id);
+
+//     /*! find the value for a key in the map */
+//     obj = map_find(&container, id);
+   
+//   }
+//     /*! if it was found, display it */
+// // YOUR CODE
+  
+//     /* since we leave the value in the map we may use it again and
+//      * should not free the memory */
   
 
-  /* remember to test with invalid keys (like 4711, or -1) */
-  for ( i = 0; i < LOOPS; ++i)
-  {
-    printf("Enter id to remove value for: ");
-    scanf("%d", &id);
+//   /* remember to test with invalid keys (like 4711, or -1) */
+//    for ( i = 0; i < LOOPS; ++i)
+//    {
+//      printf("Enter id to remove value for: ");
+//      scanf("%d", &id);
     
-    /*! find and remove a value for a key in the map */
-    obj = map_remove(&container, id);
-    print(&container);
+//      /*! find and remove a value for a key in the map */
+//      obj = map_remove(&container, id);
+//      print(&container);
 
-    /*! if it was found, display it */
-//YOUR CODE
-    /* since we removed the value from the map we will never use it again and
-     * must properly free the memory (if it was allocated) */
-  }
+//     /*! if it was found, display it */
+// //YOUR CODE
+//     /* since we removed the value from the map we will never use it again and
+//      * must properly free the memory (if it was allocated) */
+//    }
+// east beg fabricate advertising hover capture bed note beam waiter
 
 //   /*! print all strings representing an integer less than N */
-//   printf("Will now display all values less than N. Choose N: ");
-//   scanf("%d", &i);
-//   map_for_each(&container, print_less, i);
+  // printf("Will now display all values less than N. Choose N: ");
+  // scanf("%d", &i);
+  // map_for_each(&container, print_less, i);
   
-//   /*! free all remaining memory and remove from map */
-//   map_remove_if(&container, do_free, 0);
-  
+  /*! free all remaining memory and remove from map */
+ // print(&container);
+  map_remove_if(&container, do_free, 0);
+  //printf("m->total %d/n",(&container)->total);
+  print(&container);
+
+  map_destruct(&container);
   return 0;
 }
