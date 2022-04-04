@@ -1,183 +1,92 @@
-#include "map.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include "map.h"
 
-void map_init(struct map *m)
+
+void map_init(struct map* m) 
 {
-    m->first = (struct list *) malloc(sizeof(struct list));
-    m->last = m->first;
-    m->total = 0;
-    m->first->value = '\0';
-    m->first->key = 0;
+    list_init(&(m->content));
+    m->next_key = 0;
 }
 
-key_t map_insert(struct map* m, value_t v)
+key_t map_insert(struct map* m, const value_t v)
 {
-    struct list *curr;
+    struct association* newac = (struct association*)malloc(sizeof(struct association));
+    newac->value = v;
+    newac->key = m->next_key++;
+    list_push_front(&m->content, &newac->elem);
 
-    curr = (struct list *) malloc(sizeof(struct list));
-
-    m->last->next = curr;
-    curr->prev = m->last;
-    m->last = curr;
-
-    m->last->value = v;
-
-    m->total++;
-
-    m->last->key = m->total;
-
-    m->last->next = NULL;
-
-    return m->last->key;
-
-    
+    return newac->key;
 }
 
-value_t map_find(struct map* m, key_t k)
+value_t map_find(struct map* m, const key_t k)
 {
-    struct list *curr = m->last;
+    struct list_elem* curr = list_begin(&m->content);
+    struct list_elem* tail = list_end(&m->content);
 
-
-if (k <= m->total && k > 0)
-{
-    for (int i = 0; i < m->total; i++)
+    for(; curr != tail; curr = list_next(curr)) 
     {
-        if ( curr->key == k)
+        struct association* tmp = list_entry(curr, struct association, elem);
+
+        if(k == tmp->key) 
+            return tmp->value;
+    }
+
+    return NULL;
+}
+
+value_t map_remove(struct map* m, const key_t k)
+{
+    struct list_elem* curr = list_begin(&m->content);
+    struct list_elem* tail = list_end(&m->content);
+
+    for(; curr != tail; curr = list_next(curr)) 
+    {
+        struct association* tmp = list_entry(curr, struct association, elem);
+
+        if(k == tmp->key) 
         {
-            return curr->value;
+            value_t value = tmp->value;
+            list_remove(curr);
+            free(tmp);
+
+            return value;
         }
-        
-    
-       curr = curr->prev;
     }
-    
+    return NULL;
 }
 
-    
-    return '\0';
-
-
-
-}
-
-value_t map_remove(struct map* m, key_t k)
+void map_for_each(struct map* m, void (*exec)(key_t, value_t, int aux), int aux)
 {
-    value_t tmp_value;
-    struct list *curr = m->first;
-    struct list *bla;
- 
-    // if (m->total == 1 && k == 1)
-    // {
-    //     printf("hej");
-    //         free(curr->value);
-	// 	free(curr);
-    //     return NULL;
-    // }
-    
-    if (k > m->total || k < 1)
-    {
-        return NULL;
-    }
-    else{
+    struct list_elem* curr = list_begin(&m->content);
+    struct list_elem* tail = list_end(&m->content);
 
-    
-    if (k == 1)
+    for(;curr != tail; curr = list_next(curr))  
     {
-       bla = curr ->next;
-       m->first = bla;
-        k--;
-    }
-    else if (k == m->total)
-    {
-        curr = m->last;
-        bla = curr->prev;
-        m->last = bla;
-    }
-    
-    else{
-
-    
-    
-     for (int i = 0; i < k; i++)
-     {
-        curr = curr -> next;
-     }
-            bla = curr->prev;
-			bla-> next = curr ->next;
-			bla = curr ->next;
-			bla -> prev = curr -> prev;
-    tmp_value = curr->value;
-    }
-    m->total--;
-   // printf("m->total %d/n",m->total);
-    for (int i = 0; i <= m->total - k; i++)
-    {
-        bla ->key--;
-        bla = bla ->next;
-    }
-        
-        curr->value= NULL;
-		free(curr);
-    return tmp_value;
+        struct association* tmp = list_entry(curr, struct association, elem);
+        (*exec)(tmp->key, tmp->value, aux);
     }
 }
-void map_for_each(struct map* m, void (*exec)(key_t k, value_t v, int aux), int aux)
+
+void map_remove_if(struct map* m, bool (*cond)(key_t, value_t, int aux), int aux)
 {
-    struct list *curr = m->last;
-    for (int i = 0; i < m->total; i++)
+    struct list_elem* curr = list_begin(&m->content);
+    struct list_elem* tail = list_end(&m->content);
+
+
+    while(curr != tail)
     {
-        exec(curr->key,curr->value,aux);
-        curr = curr ->prev;
-       
-    }
-    
-    
-}
-void map_remove_if(struct map* m, bool (*cond)(key_t k, value_t v, int aux), int aux)
-{
-    struct list *curr = m->last;
-    struct list *bla;
-    while (curr->next != m->first)
-    {
-        bla = curr->prev;
-        if (cond(curr->key,curr->value,aux) == true)
+        struct association* tmp = list_entry(curr, struct association, elem);
+        if((*cond)(tmp->key, tmp->value, aux))
         {
-           
-           printf("curr key: %d\n", curr->key);
-            map_remove(m,curr->key);
-            
+            curr = list_remove(curr);
+            free(tmp);
         }
-        curr = bla;
-        
-        //cond(curr->key,curr->value,aux);
-       
-       
+        else
+        {
+            list_next(curr);
+        }
     }
 }
-
-
-
-
-
-
-void print(struct map *m){
-
-    struct list *curr = m->last;
-    while (curr != m->first)
-    {
-       printf("%s",curr->value);
-       printf(" Key : %d\n",curr->key);
-
-       curr = curr->prev;
-       
-    }
-    
-}
-void map_destruct(struct map* m)
-{
-    free(m->first);
-    m->last = NULL;
-//     m->total = NULL;
-//     m->first->value = NULL;
-//     m->first->key = NULL;
- }

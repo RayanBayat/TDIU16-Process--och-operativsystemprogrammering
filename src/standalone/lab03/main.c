@@ -2,19 +2,16 @@
 #include <stdio.h>
 #include <string.h>
 
-
 #include "map.h"
 
 /* Recommended compile commmand:
  * 
- 
  * gcc -Wall -Wextra -std=gnu99 -pedantic -g main.c map.c
  *
  * Recommended way to test your solution:
  *
  * valgrind --tool=memcheck ./a.out
  */
-//#error Read comments above, then remove this line.
 
 
 /* Can be used to inform compiler about unused parameters (prevent
@@ -37,17 +34,15 @@ bool do_free(key_t k UNUSED, value_t v, int aux UNUSED)
  * aux argument */
 void print_less(key_t k UNUSED, value_t v, int aux)
 {
-  /* atoi converst from sequence of character to integer, it will fail
+  /* atoi converts from sequence of character to integer, it will fail
    * when the characters are letters, check the manpage to see how */
   if ( atoi(v) < aux)
   {
     printf("%s ", v);
   }
-  
 }
 
-
-#define LOOPS 10
+#define LOOPS 3
 
 char* my_strdup(char* str)
 {
@@ -64,7 +59,7 @@ char* my_strdup(char* str)
 int main()
 {
   struct map container;
-  char input_buffer[30];
+  char input_buffer[10];
   char* obj;
   int id;
   int i;
@@ -83,52 +78,54 @@ int main()
     obj = my_strdup(input_buffer);
     id = map_insert(&container, obj);
   }
-  
+
   /* remember to test with invalid keys (like 4711, or -1) */
-//   for ( i = 0; i < LOOPS; ++i)
-//   {
-//     printf("Enter id to find value for: ");
-//     scanf("%d", &id);
+  for ( i = 0; i < LOOPS; ++i)
+  {
+    printf("Enter id to find value for: ");
+    scanf("%d", &id);
 
-//     /*! find the value for a key in the map */
-//     obj = map_find(&container, id);
-   
-//   }
-//     /*! if it was found, display it */
-// // YOUR CODE
-  
-//     /* since we leave the value in the map we may use it again and
-//      * should not free the memory */
-  
+    /*! find the value for a key in the map */
+    obj = map_find(&container, id);
 
-//   /* remember to test with invalid keys (like 4711, or -1) */
-//    for ( i = 0; i < LOOPS; ++i)
-//    {
-//      printf("Enter id to remove value for: ");
-//      scanf("%d", &id);
+    /*! if it was found, display it */
+    if(obj != NULL)
+      printf("FOUND: %s\n", obj);
+    else
+      printf("COULDNT FIND: %s\n", obj);
+      
+    /* since we leave the value in the map we may use it again and
+     * should not free the memory */
+  }
+
+  /* remember to test with invalid keys (like 4711, or -1) */
+  for ( i = 0; i < LOOPS; ++i)
+  {
+    printf("Enter id to remove value for: ");
+    scanf("%d", &id);
     
-//      /*! find and remove a value for a key in the map */
-//      obj = map_remove(&container, id);
-//      print(&container);
+    /*! find and remove a value for a key in the map */
+    obj = map_remove(&container, id);
 
-//     /*! if it was found, display it */
-// //YOUR CODE
-//     /* since we removed the value from the map we will never use it again and
-//      * must properly free the memory (if it was allocated) */
-//    }
-// east beg fabricate advertising hover capture bed note beam waiter
-
-//   /*! print all strings representing an integer less than N */
-  // printf("Will now display all values less than N. Choose N: ");
-  // scanf("%d", &i);
-  // map_for_each(&container, print_less, i);
+    /*! if it was found, display it */
+    if(obj != NULL)
+      printf("REMOVED: %s\n", obj);
+    else
+      printf("COULDNT REMOVE: %s\n", obj);
   
-  /*! free all remaining memory and remove from map */
- // print(&container);
-  map_remove_if(&container, do_free, 0);
-  //printf("m->total %d/n",(&container)->total);
-  print(&container);
+    /* since we removed the value from the map we will never use it again and
+     * must properly free the memory (if it was allocated) */
+    free(obj);
+  }
 
-  map_destruct(&container);
+
+  /*! print all strings representing an integer less than N */
+  printf("Will now display all values less than N. Choose N: ");
+  scanf("%d", &i);
+  map_for_each(&container, print_less, i);
+
+  /*! free all remaining memory and remove from map */
+  map_remove_if(&container, do_free, 0);
+  
   return 0;
 }
