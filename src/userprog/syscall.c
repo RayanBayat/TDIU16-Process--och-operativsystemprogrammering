@@ -62,14 +62,17 @@ syscall_handler (struct intr_frame *f)
   
   switch ( esp[0]/* retrive syscall number */ )
   {
-    case  SYS_HALT:
+    case SYS_HALT:
     {
+      printf("Hello Ima sleep here");
       sys_halt();
       break;
     }
     case SYS_EXIT:
     {
-      sys_exit(esp[1]);
+      
+    sys_exit(esp[1]);
+     break;
     }
     default:
     {

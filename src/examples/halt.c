@@ -11,7 +11,8 @@
 int
 main (void)
 {
-  printf("jojo ima drop here");
-  halt ();
-  /* not reached */
+  //printf("jojo ima drop here");
+   halt ();
+ //exit(0);
+   /* not reached */
 }
