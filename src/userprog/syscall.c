@@ -14,6 +14,9 @@
 #include "userprog/process.h"
 #include "devices/input.h"
 
+
+#include "threads/init.h"
+
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -42,13 +45,13 @@ const int argc[] = {
 };
 static void sys_halt(void)
 {
-  //printf("System Call Halt\n");
+  printf("System Call Halt\n");
   power_off();
 }
 static void sys_exit(int status)
 {
-  //printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
-  //printf("Status: %d\n", status);
+  printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
+  printf("Status: %d\n", status);
   process_exit(status);
   thread_exit();
 }
@@ -57,8 +60,17 @@ syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
   
-  switch ( 0 /* retrive syscall number */ )
+  switch ( esp[0]/* retrive syscall number */ )
   {
+    case  SYS_HALT:
+    {
+      sys_halt();
+      break;
+    }
+    case SYS_EXIT:
+    {
+      sys_exit(esp[1]);
+    }
     default:
     {
       printf ("Executed an unknown system call!\n");
@@ -68,5 +80,7 @@ syscall_handler (struct intr_frame *f)
       
       thread_exit ();
     }
+
   }
+  
 }

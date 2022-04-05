@@ -42,7 +42,7 @@ void print_less(key_t k UNUSED, value_t v, int aux)
   }
 }
 
-#define LOOPS 3
+#define LOOPS 8
 
 char* my_strdup(char* str)
 {
@@ -55,7 +55,9 @@ char* my_strdup(char* str)
   
   return dst; /*(!) return our deep copy of str */
 }
-
+//gcc -Wall -Wextra -std=gnu99 -pedantic -g -c ../../lib/kernel/list.c  
+//gcc -Wall -Wextra -std=gnu99 -pedantic -g main.c map.c list.o
+//valgrind --tool=memcheck ./a.out
 int main()
 {
   struct map container;

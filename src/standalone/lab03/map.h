@@ -1,10 +1,8 @@
 #pragma once
-
+#include <stdlib.h>
 #include <stdbool.h>
 #include "../../lib/kernel/list.h"
 
-
-// FRÅGA: Hur ska vi sköta felhantering?
 #define PANIC(message) do { printf("PANIC: %s\n", message); exit(1); } while (0)
 
 typedef int key_t;

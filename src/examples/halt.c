@@ -5,10 +5,13 @@
    Just invokes a system call that shuts down the OS. */
 
 #include <syscall.h>
+#include <stdio.h>
+
 
 int
 main (void)
 {
+  printf("jojo ima drop here");
   halt ();
   /* not reached */
 }
