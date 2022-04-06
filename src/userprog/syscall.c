@@ -14,11 +14,12 @@
 #include "userprog/process.h"
 #include "devices/input.h"
 
-
+#include "devices/timer.h"
+#include "userprog/flist.h"
 #include "threads/init.h"
 
 static void syscall_handler (struct intr_frame *);
-
+static bool verify_variable_length(char* start);
 void
 syscall_init (void) 
 {
@@ -74,6 +75,136 @@ syscall_handler (struct intr_frame *f)
     sys_exit(esp[1]);
      break;
     }
+    case SYS_CREATE:
+    {
+      char* file_name = (char*)esp[1];
+      int file_size = esp[2];
+
+      f->eax = filesys_create(file_name, file_size);
+
+      return;
+    }
+    case SYS_OPEN:
+    {
+      char* file_name = (char*)esp[1];
+      int fd = 0;
+      if (file_name == NULL  || !verify_variable_length(file_name))
+      {
+        sys_exit(-1);
+      }
+      struct file* file = filesys_open(file_name);
+
+      if(file == NULL)
+      {
+        f->eax = -1;
+        return;
+      }
+      
+      
+
+      fd = map_insert(&(thread_current()->fmap),file);
+      printf("fd = %d\n", fd);
+      f->eax = fd;
+
+      return;
+    }
+    case SYS_CLOSE:
+    {
+      int fd = esp[1];
+      struct file* file = map_remove(&(thread_current()->fmap), fd);
+
+      if(file == NULL)
+      {
+        f->eax = -1;
+        return;
+      }
+      
+      return;
+    }
+    case SYS_READ:
+    {
+      int serviced = 0;
+      //printf("Hello I'm reading \n");
+      int fd= esp[1];
+      char* buffer = (char*)esp[2];
+      int length = esp[3];
+      if(fd == STDOUT_FILENO || buffer == NULL)
+      {
+        f->eax = -1;
+        return;
+      }
+
+     // printf("fd %d\n", fd);
+      //printf("buffer %c\n", *buffer);
+      //printf("length %d\n",length);
+      if (fd == STDIN_FILENO)
+      {
+        for (int i = 0; i < length; i++)
+        {
+          //printf("input_getc() is next\n");
+          buffer[i] = input_getc();
+        //  printf("input_getc() is done\n");
+          if (buffer[i] == '\r')
+          {
+            buffer[i] = '\n';
+          }
+          
+          putbuf(&buffer[i],1);
+          serviced++;
+          
+        }
+        
+      }
+      else
+      {
+       struct file* file = map_find(&(thread_current()->fmap), fd);
+        if(file == NULL)
+        {
+          f->eax = -1;
+          return;
+        }
+
+        serviced = file_read(file, buffer, length); 
+      }
+      
+      //printf("returning \n");
+      f->eax = serviced;
+      return;
+    }
+    case SYS_WRITE:
+    {
+      int serviced=0;
+      int fd = esp[1];
+      char* buffer = (char*)esp[2];
+      int length = esp[3];
+    //  printf("\n");
+       //printf("Hello I'm writing \n");
+      
+
+      if (fd == STDOUT_FILENO)
+      {
+        for (int i = 0; i < length; i++)
+        {
+          putbuf(&buffer[i],1);
+          serviced++;
+        }
+        
+      }
+      else
+      {
+        struct file* file = map_find(&(thread_current()->fmap), fd);
+        if(file == NULL)
+        {
+          f->eax = -1;
+          return;
+        }
+        serviced = file_write(file, buffer, length);
+      }
+
+      f->eax = serviced;
+      return;
+    }
+
     default:
     {
       printf ("Executed an unknown system call!\n");
@@ -86,4 +217,31 @@ syscall_handler (struct intr_frame *f)
 
   }
   
+}
+bool verify_variable_length(char* start)
+{
+  if(!is_user_vaddr(start))
+    return false;
+
+  if(pagedir_get_page(thread_current()->pagedir, start) == NULL)
+    return false;
+ 
+  char *cur = start;
+
+  while(*cur != '\0')// !is_end_of_string(cur))
+  {
+    unsigned prev_pg = pg_no(cur++);
+
+
+    if(pg_no(cur) != prev_pg)
+     {
+      if(is_user_vaddr(cur))
+        return false;
+
+      if(pagedir_get_page(thread_current()->pagedir, cur) == NULL)
+        return false;
+     }
+  }
+
+  return true;
 }
