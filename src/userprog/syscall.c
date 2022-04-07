@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "stdio.h"
 #include <syscall-nr.h>
 #include "userprog/syscall.h"
 #include "threads/interrupt.h"
@@ -19,7 +20,6 @@
 #include "threads/init.h"
 
 static void syscall_handler (struct intr_frame *);
-static bool verify_variable_length(char* start);
 void
 syscall_init (void) 
 {
@@ -59,8 +59,10 @@ static void sys_exit(int status)
 static void
 syscall_handler (struct intr_frame *f) 
 {
+
+
   int32_t* esp = (int32_t*)f->esp;
-  
+  //printf("esp[0] = %d\n", esp[0]);
   switch ( esp[0]/* retrive syscall number */ )
   {
     case SYS_HALT:
@@ -88,7 +90,7 @@ syscall_handler (struct intr_frame *f)
     {
       char* file_name = (char*)esp[1];
       int fd = 0;
-      if (file_name == NULL  || !verify_variable_length(file_name))
+      if (file_name == NULL)
       {
         sys_exit(-1);
       }
@@ -107,6 +109,14 @@ syscall_handler (struct intr_frame *f)
       f->eax = fd;
 
       return;
+    }
+    case SYS_REMOVE:
+    {
+       char* file_name = (char*)esp[1];
+       f->eax = filesys_remove(file_name);
+
+        return;
+
     }
     case SYS_CLOSE:
     {
@@ -180,7 +190,11 @@ syscall_handler (struct intr_frame *f)
     //  printf("\n");
        //printf("Hello I'm writing \n");
       
-
+      if(fd == STDIN_FILENO || buffer == NULL)
+      {
+        f->eax = -1;
+        return;
+      }
       if (fd == STDOUT_FILENO)
       {
         for (int i = 0; i < length; i++)
@@ -202,9 +216,55 @@ syscall_handler (struct intr_frame *f)
       }
 
       f->eax = serviced;
+     // printf("Write done\n");
       return;
     }
+      case SYS_SEEK:
+      {
+       // printf("this is seek\n");
 
+        int fd = esp[1];
+        int position = esp[2];
+        struct file* file = map_find(&(thread_current()->fmap),fd) ;
+        if(file == NULL)
+        {
+          f->eax = -1;
+          return;
+        }
+        if (position >= (int)file_length(file))
+        {
+          position = (int)file_length(file);
+        }
+        
+        file_seek(file,position);
+
+        // printf("seek done\n");
+        return;
+      }
+      case SYS_TELL:
+      {
+       //  printf("this is tell\n");
+        int fd = esp[1];
+        struct file* file = map_find(&(thread_current()->fmap),fd) ;
+        if(file == NULL)
+        {
+          f->eax = -1;
+          return;
+        }
+        f->eax = file_tell(file);
+        //printf("tell done\n");
+        return;
+      
+      }
+      case SYS_FILESIZE:
+      {
+          int fd = esp[1];
+        struct file* file = map_find(&(thread_current()->fmap),fd) ;
+        f->eax = file_length(file);
+        printf("size is %d\n",f->eax);
+        return;
+
+      }
     default:
     {
       printf ("Executed an unknown system call!\n");
@@ -217,31 +277,4 @@ syscall_handler (struct intr_frame *f)
 
   }
   
-}
-bool verify_variable_length(char* start)
-{
-  if(!is_user_vaddr(start))
-    return false;
-
-  if(pagedir_get_page(thread_current()->pagedir, start) == NULL)
-    return false;
- 
-  char *cur = start;
-
-  while(*cur != '\0')// !is_end_of_string(cur))
-  {
-    unsigned prev_pg = pg_no(cur++);
-
-
-    if(pg_no(cur) != prev_pg)
-     {
-      if(is_user_vaddr(cur))
-        return false;
-
-      if(pagedir_get_page(thread_current()->pagedir, cur) == NULL)
-        return false;
-     }
-  }
-
-  return true;
 }

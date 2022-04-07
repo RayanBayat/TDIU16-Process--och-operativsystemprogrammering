@@ -262,8 +262,8 @@ int main(int argc, char* argv[])
       {
         snprintf (buffer, 8, "%4d", j*16+i);
         seek (id, (j*16+i)*4);
-        result = write (STDOUT_FILENO, buffer, 4);
-        result = write (id, buffer, 4);
+        result = write(STDOUT_FILENO, buffer, 4);
+        result = write(id, buffer, 4);
         success = success && (result == 4);
         result = tell (id);
         success = success && (result == (j*16+i+1)*4);
