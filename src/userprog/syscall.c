@@ -184,7 +184,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_WRITE:
     {
-      int serviced=0;
+      
       int fd = esp[1];
       char* buffer = (char*)esp[2];
       int length = esp[3];
@@ -198,11 +198,13 @@ syscall_handler (struct intr_frame *f)
       }
       if (fd == STDOUT_FILENO)
       {
-        for (int i = 0; i < length; i++)
-        {
-          putbuf(&buffer[i],1);
-          serviced++;
-        }
+
+        putbuf(buffer,length);
+        // for (int i = 0; i < length; i++)
+        // {
+        //   putbuf(&buffer[i],1);
+        //   serviced++;
+        // }
         
       }
       else
@@ -213,10 +215,10 @@ syscall_handler (struct intr_frame *f)
           f->eax = -1;
           return;
         }
-        serviced = file_write(file, buffer, length);
+        length = file_write(file, buffer, length);
       }
 
-      f->eax = serviced;
+      f->eax = length;
      // printf("Write done\n");
       return;
     }

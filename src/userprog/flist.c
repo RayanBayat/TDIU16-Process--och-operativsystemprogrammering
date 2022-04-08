@@ -1,12 +1,12 @@
 
 #include "flist.h"
-
+#include "filesys/filesys.h"
 
 static bool do_free(key_t k UNUSED, value_t v, int aux UNUSED)
 {
     //ersätt med filsysclose
-filesy
-  free(v);     /*! free memory */
+    filesys_close(v);
+ // free(v);     /*! free memory */
   return true; /*  and remove from collection */
 }
 void map_init(struct map* m) 
