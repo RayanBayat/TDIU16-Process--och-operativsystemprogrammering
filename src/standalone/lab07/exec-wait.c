@@ -49,7 +49,7 @@ struct running_thread *exec(int param) {
 // gång för varje anrop till "exec".
 int wait(struct running_thread *data) {
   // Hämta resultatet, frigör minnet och returnera resultatet.
-  sema_down(&mysemaphone);
+  sema_down(&data->mysemaphone);
   int result = data->result;
   free(data);
   return result;

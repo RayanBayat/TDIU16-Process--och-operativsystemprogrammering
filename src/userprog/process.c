@@ -260,7 +260,13 @@ process_cleanup (void)
       cur->pagedir = NULL;
       pagedir_activate (NULL);
       pagedir_destroy (pd);
+
+
     }  
+   //mycode
+   
+    map_freeall(&thread_current()->fmap);
+
   debug("%s#%d: process_cleanup() DONE with status %d\n",
         cur->name, cur->tid, status);
 }

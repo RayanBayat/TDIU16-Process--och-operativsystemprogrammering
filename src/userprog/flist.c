@@ -2,7 +2,13 @@
 #include "flist.h"
 
 
-
+static bool do_free(key_t k UNUSED, value_t v, int aux UNUSED)
+{
+    //ersätt med filsysclose
+filesy
+  free(v);     /*! free memory */
+  return true; /*  and remove from collection */
+}
 void map_init(struct map* m) 
 {
     list_init(&(m->content));
@@ -87,4 +93,9 @@ void map_remove_if(struct map* m, bool (*cond)(key_t, value_t, int aux), int aux
             list_next(curr);
         }
     }
+}
+void map_freeall(struct map* m)
+{
+
+    map_remove_if(m,do_free,0);
 }

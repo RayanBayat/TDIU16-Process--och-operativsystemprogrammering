@@ -67,7 +67,7 @@ syscall_handler (struct intr_frame *f)
   {
     case SYS_HALT:
     {
-      printf("Hello Ima sleep here");
+     // printf("Hello Ima sleep here");
       sys_halt();
       break;
     }
@@ -128,11 +128,12 @@ syscall_handler (struct intr_frame *f)
         f->eax = -1;
         return;
       }
-      
+      filesys_close(file);
       return;
     }
     case SYS_READ:
     {
+      //process_cleanup();
       int serviced = 0;
       //printf("Hello I'm reading \n");
       int fd= esp[1];
