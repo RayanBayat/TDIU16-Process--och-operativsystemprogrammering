@@ -105,7 +105,7 @@ syscall_handler (struct intr_frame *f)
       
 
       fd = map_insert(&(thread_current()->fmap),file);
-      printf("fd = %d\n", fd);
+      //printf("fd = %d\n", fd);
       f->eax = fd;
 
       return;

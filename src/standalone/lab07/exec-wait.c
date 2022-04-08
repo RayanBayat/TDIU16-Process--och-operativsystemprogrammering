@@ -5,6 +5,9 @@
 #include <stdio.h>
 
 // Funktionen vi vill köra parallellt. Den finns definierad senare i filen.
+
+struct semaphore mysemaphone;
+
 int do_work(int param);
 
 /**
@@ -23,6 +26,7 @@ struct running_thread {
 // Första funktionen som körs i nya trådar.
 void thread_main(struct running_thread *data) {
   data->result = do_work(data->param);
+  sema_up(&mysemaphone);
 }
 
 // Starta en ny tråd som kör funktionen "do_work" med "param" som
@@ -45,6 +49,7 @@ struct running_thread *exec(int param) {
 // gång för varje anrop till "exec".
 int wait(struct running_thread *data) {
   // Hämta resultatet, frigör minnet och returnera resultatet.
+  sema_down(&mysemaphone);
   int result = data->result;
   free(data);
   return result;
@@ -65,6 +70,7 @@ int wait(struct running_thread *data) {
 // olika trådar.
 int do_work(int param) {
   // Här sker tungt arbete...
+ 
   timer_msleep(param);
 
   // För enkelhets skull returnerar vi bara parametern i kvadrat.
@@ -74,14 +80,16 @@ int do_work(int param) {
 // Main-funktion. Startar två extra trådar som anropar "do_work". Kör även
 // "do_work" i main-tråden.
 int main(void) {
+  sema_init(&mysemaphone,0);
   struct running_thread *a = exec(10);
   struct running_thread *b = exec(100);
 
+ 
+  //sema_down(&mysemaphone);
   int c = do_work(5);
 
   printf("Result for 'a': %d\n", wait(a));
   printf("Result for 'b': %d\n", wait(b));
   printf("Result for 'c': %d\n", c);
-
   return 0;
 }
