@@ -6,7 +6,7 @@
 
 // Funktionen vi vill köra parallellt. Den finns definierad senare i filen.
 
-struct semaphore mysemaphone;
+
 
 int do_work(int param);
 
@@ -21,12 +21,15 @@ struct running_thread {
 
   // Om tråden är klar: Resultatet som "do_work" har beräknat.
   int result;
+  struct semaphore mysemaphone;
+  
 };
 
 // Första funktionen som körs i nya trådar.
 void thread_main(struct running_thread *data) {
+ 
   data->result = do_work(data->param);
-  sema_up(&mysemaphone);
+  sema_up(&data->mysemaphone);
 }
 
 // Starta en ny tråd som kör funktionen "do_work" med "param" som
@@ -40,7 +43,7 @@ struct running_thread *exec(int param) {
 
   // Skapa en ny tråd som kör "thread_main" och ge den tillgång till "data".
   thread_new(&thread_main, data);
-
+ sema_init(&data->mysemaphone,0);
   return data;
 }
 
@@ -80,7 +83,6 @@ int do_work(int param) {
 // Main-funktion. Startar två extra trådar som anropar "do_work". Kör även
 // "do_work" i main-tråden.
 int main(void) {
-  sema_init(&mysemaphone,0);
   struct running_thread *a = exec(10);
   struct running_thread *b = exec(100);
 
