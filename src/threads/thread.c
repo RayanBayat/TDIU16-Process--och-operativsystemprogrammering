@@ -123,6 +123,8 @@ init_thread (struct thread *t, const char *name, int priority)
 void
 thread_start (void) 
 {
+
+  
   /* Create the idle thread. */
   struct semaphore idle_started;
   sema_init (&idle_started, 0);
@@ -229,6 +231,7 @@ thread_create (const char *name, int priority,
         thread_current()->name,
         thread_current()->tid,
         name, tid);
+  
   return tid;
 }
 

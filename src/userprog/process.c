@@ -26,10 +26,13 @@
 #define HACK
 
 
+
+
 /* This function is called at boot time (threads/init.c) to initialize
  * the process subsystem. */
 void process_init(void)
 {
+
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -39,6 +42,7 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status UNUSED)
 {
+
 }
 
 /* Print a list of all running processes. The list shall include all
@@ -51,6 +55,8 @@ void process_print_list()
 struct parameters_to_start_process
 {
   char* command_line;
+  struct semaphore process_sema;
+  bool process_to_start_success;
 };
 
 static void
@@ -65,6 +71,8 @@ start_process(struct parameters_to_start_process* parameters) NO_RETURN;
 int
 process_execute (const char *command_line) 
 {
+   //struct semaphore temp_process_sema;
+
   char debug_name[64];
   int command_line_size = strlen(command_line) + 1;
   tid_t thread_id = -1;
@@ -89,19 +97,40 @@ process_execute (const char *command_line)
   thread_id = thread_create (debug_name, PRI_DEFAULT,
                              (thread_func*)start_process, &arguments);
 
-  process_id = thread_id;
+      sema_init(&arguments.process_sema,0);
+   if (thread_id == TID_ERROR)
+   {
+      
+      sema_up(&arguments.process_sema);
+   }
+   
+   
+
+ 
 
   /* AVOID bad stuff by turning off. YOU will fix this! */
-  power_off();
+  //power_off();
   
   
   /* WHICH thread may still be using this right now? */
-  free(arguments.command_line);
+
+   
+   sema_down(&arguments.process_sema);
+  process_id = thread_id;
+
+  
+   if (!arguments.process_to_start_success)
+   {
+      process_id = -1;
+   }
+   free(arguments.command_line);
+  
 
   debug("%s#%d: process_execute(\"%s\") RETURNS %d\n",
         thread_current()->name,
         thread_current()->tid,
         command_line, process_id);
+
 
   /* MUST be -1 if `load' in `start_process' return false */
   return process_id;
@@ -115,6 +144,7 @@ void *setup_main_stack_asm(const char *command_line, void *esp);
 static void
 start_process (struct parameters_to_start_process* parameters)
 {
+  
   /* The last argument passed to thread_create is received here... */
   struct intr_frame if_;
   bool success;
@@ -142,6 +172,7 @@ start_process (struct parameters_to_start_process* parameters)
   
   if (success)
   {
+      
     /* We managed to load the new program to a process, and have
        allocated memory for a process stack. The stack top is in
        if_.esp, now we must prepare and place the arguments to main on
@@ -161,9 +192,10 @@ start_process (struct parameters_to_start_process* parameters)
     /* The stack and stack pointer should be setup correct just before
        the process start, so this is the place to dump stack content
        for debug purposes. Disable the dump when it works. */
-    
-//    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+    parameters->process_to_start_success = true;
 
+//    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+   
   }
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
@@ -172,14 +204,21 @@ start_process (struct parameters_to_start_process* parameters)
         parameters->command_line);
   
   
+
+  
+  sema_up(&parameters->process_sema);
   /* If load fail, quit. Load may fail for several reasons.
      Some simple examples:
      - File doeas not exist
      - File do not contain a valid program
      - Not enough memory
+
+   
   */
+ 
   if ( ! success )
   {
+   parameters->process_to_start_success = false;
     thread_exit ();
   }
   
