@@ -116,6 +116,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* YES! You may want add stuff here. */
   map_init(&(t->fmap));
+  t->pid = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.

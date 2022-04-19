@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 #define MAX_SIMULTANEOUS 50
 #define MAX_REPEAT 1000
 #define BUF_SIZE 64
@@ -84,12 +85,14 @@ int main(int argc, char* argv[])
     
     exec(cmd);
     
-//    plist();
-
+    //printf("hej\n");
+    //
+    //plist();
     /* since we do not have the wait systemcall yet */
     printf("Now entering busy-loop to let some processes finish\n");
     while (ticks--)
       ;
   }
+  //
   return 0;
 }

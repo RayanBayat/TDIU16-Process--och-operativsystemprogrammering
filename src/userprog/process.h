@@ -2,12 +2,13 @@
 #define USERPROG_PROCESS_H
 
 #include "threads/thread.h"
-
+struct plist plist;
 void process_init (void);
 void process_print_list (void);
 void process_exit (int status);
 tid_t process_execute (const char *file_name);
 int process_wait (tid_t);
+void cleanup_children(pid_t, struct process_information* , int);
 void process_cleanup (void);
 void process_activate (void);
 

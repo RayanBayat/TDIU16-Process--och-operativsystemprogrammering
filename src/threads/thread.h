@@ -4,8 +4,8 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-
 #include "userprog/flist.h"
+#include "userprog/plist.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -96,6 +96,8 @@ struct thread
   
     /* YES! You may want to add stuff. But make note of point 2 above. */
     struct map fmap;
+
+    pid_t pid;
    // pid_t pid;
 #ifdef USERPROG
     /* Owned by userprog/process.c. */

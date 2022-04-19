@@ -51,10 +51,14 @@ static void sys_halt(void)
 }
 static void sys_exit(int status)
 {
-  printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
-  printf("Status: %d\n", status);
-  process_exit(status);
+  // printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
+  // printf("Status: %d\n", status);
+  // process_exit(status);
+  struct process_information* process = plist_find(&plist, thread_current()->pid);
+  process->alive = false;
+  process->status_code = status;
   thread_exit();
+  return;
 }
 static void
 syscall_handler (struct intr_frame *f) 
@@ -65,9 +69,30 @@ syscall_handler (struct intr_frame *f)
   //printf("esp[0] = %d\n", esp[0]);
   switch ( esp[0]/* retrive syscall number */ )
   {
+    case SYS_EXEC:
+    {
+      char* file_name = (char*)esp[1];
+      f->eax = process_execute(file_name);
+      return;
+    }
+    case SYS_WAIT:
+    {
+      f->eax = process_wait(esp[1]);
+      return;
+    }
+    case SYS_PLIST: 
+    {
+      plist_printf(&plist);
+      return;
+    }
+    case SYS_SLEEP:
+    {
+      timer_msleep(esp[1]);
+      return;
+    }
     case SYS_HALT:
     {
-     // printf("Hello Ima sleep here");
+     
       sys_halt();
       break;
     }

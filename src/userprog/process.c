@@ -32,7 +32,7 @@
  * the process subsystem. */
 void process_init(void)
 {
-
+   plist_init(&plist);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -57,6 +57,8 @@ struct parameters_to_start_process
   char* command_line;
   struct semaphore process_sema;
   bool process_to_start_success;
+   pid_t pid;
+  pid_t parent_pid;
 };
 
 static void
@@ -80,6 +82,9 @@ process_execute (const char *command_line)
 
   /* LOCAL variable will cease existence when function return! */
   struct parameters_to_start_process arguments;
+
+
+  arguments.parent_pid = thread_current()->pid;
 
   debug("%s#%d: process_execute(\"%s\") ENTERED\n",
         thread_current()->name,
@@ -116,7 +121,7 @@ process_execute (const char *command_line)
 
    
    sema_down(&arguments.process_sema);
-  process_id = thread_id;
+  process_id = arguments.pid;
 
   
    if (!arguments.process_to_start_success)
@@ -187,12 +192,26 @@ start_process (struct parameters_to_start_process* parameters)
 
     /* This uses a "reference" solution in assembler that you
        can replace with C-code if you wish. */
+   struct process_information* process_info = (struct process_information*)malloc(sizeof(struct process_information));
+   process_info->name = (char*)malloc(sizeof(file_name));
+   strlcpy(process_info->name,file_name,sizeof(file_name));
+   process_info->parent = parameters->parent_pid;
+   process_info->status_code = -1;
+   process_info->parent_alive = true;
+   process_info->alive = true;
+
+
+
+      
     if_.esp = setup_main_stack_asm(parameters->command_line, if_.esp);
 
     /* The stack and stack pointer should be setup correct just before
        the process start, so this is the place to dump stack content
        for debug purposes. Disable the dump when it works. */
+   parameters->pid=plist_insert(&plist,process_info);
+   thread_current()->pid = parameters->pid;
     parameters->process_to_start_success = true;
+   
 
 //    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
    
@@ -249,6 +268,15 @@ process_wait (int child_id)
   debug("%s#%d: process_wait(%d) ENTERED\n",
         cur->name, cur->tid, child_id);
   /* Yes! You need to do something good here ! */
+   struct process_information* process = plist_find(&plist,child_id);
+
+    if(process != NULL)
+  {
+     sema_down(&process->pro_sema);
+     status = process -> status_code;
+  }
+  plist_remove(&plist,child_id);
+
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
         cur->name, cur->tid, child_id, status);
   
@@ -266,13 +294,22 @@ process_wait (int child_id)
    or initialized to something sane, or else that any such situation
    is detected.
 */
-  
+void cleanup_children(pid_t key, struct process_information* child, int parent_id)
+{
+  if (child->parent == (pid_t)parent_id)
+  {
+    child->parent_alive = false;
+    if(!child->alive)
+      plist_remove(&plist, key);
+  }
+}
 void
 process_cleanup (void)
 {
   struct thread  *cur = thread_current ();
   uint32_t       *pd  = cur->pagedir;
   int status = -1;
+  struct process_information* this_process = plist_find(&plist, cur->pid);
   
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
   
@@ -282,7 +319,11 @@ process_cleanup (void)
    * that you exit.  (Since the parent may be the main() function,
    * that may sometimes poweroff as soon as process_wait() returns,
    * possibly before the printf is completed.)
+   * 
    */
+  if(this_process != NULL)
+    status = this_process->status_code;
+ 
   printf("%s: exit(%d)\n", thread_name(), status);
   
   /* Destroy the current process's page directory and switch back
@@ -305,7 +346,21 @@ process_cleanup (void)
    //mycode
    
     map_freeall(&thread_current()->fmap);
-
+   if (this_process != NULL)
+   {
+     if (!this_process->parent_alive)
+     {
+       plist_remove(&plist,cur->pid);
+     }
+     else
+     {
+        this_process->alive = false;
+        plist_for_each(&plist,cleanup_children,cur->pid);
+     }
+     
+     sema_up(&this_process->pro_sema);
+   }
+   
   debug("%s#%d: process_cleanup() DONE with status %d\n",
         cur->name, cur->tid, status);
 }

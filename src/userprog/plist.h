@@ -29,5 +29,50 @@
      
  */
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include "threads/malloc.h"
+#include "../lib/kernel/list.h"
+#include "threads/synch.h"
+
+
+
+typedef unsigned pid_t;
+
+
+struct process_information 
+{
+  char* name;
+  pid_t parent;
+  int status_code;
+  struct semaphore pro_sema;
+  bool parent_alive;
+  bool alive;
+};
+
+struct p_association
+{
+    pid_t key;
+    struct process_information* value;
+    struct list_elem elem;
+};
+
+struct plist
+{
+    struct list content;
+    pid_t next_key;
+};
+
+void plist_init(struct plist*);
+pid_t plist_insert(struct plist*, struct process_information*);
+struct process_information* plist_find(struct plist*, const pid_t);
+struct process_information* plist_remove(struct plist*, const pid_t);
+void plist_printf(struct plist*);
+
+void plist_for_each(struct plist*, void (*exec)(pid_t, struct process_information*, int aux), int aux);
+void plist_remove_if(struct plist* this, bool (*cond)(pid_t, struct process_information*, int aux), int aux);
+void plist_remove_all(struct plist* this);
 
 #endif
