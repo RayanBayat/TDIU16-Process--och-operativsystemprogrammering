@@ -4,32 +4,32 @@
 
 static struct lock plist_lock;
 
-void plist_init(struct plist* this) 
+void plist_init(struct plist* p) 
 {
-    list_init(&this->content);
+    list_init(&p->content);
     lock_init(&plist_lock);
-    this->next_key = 1;
+    p->next_key = 1;
 }
 
-pid_t plist_insert(struct plist* this, struct process_information* value)
+pid_t plist_insert(struct plist* p, struct process_information* value)
 {
     lock_acquire(&plist_lock);
     struct p_association* new_p_association = (struct p_association*)malloc(sizeof(struct p_association));
     sema_init(&value->pro_sema, 0);
     new_p_association->value = value;
-    new_p_association->key = this->next_key++;
-    list_push_back(&this->content, &new_p_association->elem);
+    new_p_association->key = p->next_key++;
+    list_push_back(&p->content, &new_p_association->elem);
 
     lock_release(&plist_lock);
     return new_p_association->key;
 }
 
-struct process_information* plist_find(struct plist* this, const pid_t key)
+struct process_information* plist_find(struct plist* p, const pid_t key)
 {
     struct list_elem* current;
-    struct list_elem* end = list_end(&this->content);
+    struct list_elem* end = list_end(&p->content);
 
-    for(current = list_begin(&this->content); 
+    for(current = list_begin(&p->content); 
         current != end; 
         current = list_next(current)) 
     {
@@ -41,14 +41,14 @@ struct process_information* plist_find(struct plist* this, const pid_t key)
     return NULL;
 }
 
-struct process_information* plist_remove(struct plist* this, const pid_t key)
+struct process_information* plist_remove(struct plist* p, const pid_t key)
 {
     lock_acquire(&plist_lock);
 
     struct list_elem* current;
-    struct list_elem* end = list_end(&this->content);
+    struct list_elem* end = list_end(&p->content);
 
-    for(current = list_begin(&this->content); 
+    for(current = list_begin(&p->content); 
         current != end; 
         current = list_next(current)) 
     {
@@ -67,15 +67,15 @@ struct process_information* plist_remove(struct plist* this, const pid_t key)
     return NULL;
 }
 
-void plist_for_each(struct plist* this, void (*exec)(pid_t, struct process_information*, int aux), int aux)
+void plist_for_each(struct plist* p, void (*exec)(pid_t, struct process_information*, int aux), int aux)
 {
   
     lock_acquire(&plist_lock);
     
     struct list_elem* current;
-    struct list_elem* end = list_end(&this->content);
+    struct list_elem* end = list_end(&p->content);
 
-    for(current = list_begin(&this->content); 
+    for(current = list_begin(&p->content); 
         current != end; 
         current = list_next(current)) 
     {
@@ -92,16 +92,16 @@ static void print_value_struct(pid_t key, struct process_information* value, int
     printf("-----------------------------------------------\n");
 }
 
-void plist_printf(struct plist* this)
+void plist_printf(struct plist* p)
 {
-    plist_for_each(this, print_value_struct, 0);
+    plist_for_each(p, print_value_struct, 0);
 }
 
-void plist_remove_if(struct plist* this, bool (*cond)(pid_t, struct process_information*, int aux), int aux)
+void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_information*, int aux), int aux)
 {
     lock_acquire(&plist_lock);
-    struct list_elem* current = list_begin(&this->content);
-    struct list_elem* end = list_end(&this->content);
+    struct list_elem* current = list_begin(&p->content);
+    struct list_elem* end = list_end(&p->content);
 
     while(current != end)
     {
@@ -132,7 +132,7 @@ static bool do_free(pid_t k UNUSED, struct process_information* v, int aux UNUSE
 }
 
 // Removes everything that remains in plist
-void plist_remove_all(struct plist* this)
+void plist_remove_all(struct plist* p)
 {
-    plist_remove_if(this, do_free, 0);
+    plist_remove_if(p, do_free, 0);
 }

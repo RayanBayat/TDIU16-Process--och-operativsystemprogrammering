@@ -42,7 +42,8 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status UNUSED)
 {
-
+   struct process_information* process_info = plist_find(&plist,thread_current()->pid);
+   process_info->status_code = status;
 }
 
 /* Print a list of all running processes. The list shall include all
