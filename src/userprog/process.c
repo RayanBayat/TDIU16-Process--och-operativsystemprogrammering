@@ -30,7 +30,7 @@
 
 /* This function is called at boot time (threads/init.c) to initialize
  * the process subsystem. */
-void process_init(void)
+void process_init(void)                                                                                    //Process init
 {
    plist_init(&plist);
 }
@@ -40,10 +40,11 @@ void process_init(void)
  * instead. Note however that all cleanup after a process must be done
  * in process_cleanup, and that process_cleanup are already called
  * from thread_exit - do not call cleanup twice! */
-void process_exit(int status UNUSED)
+void process_exit(int status UNUSED)                                                                                    //Process exit
 {
-   struct process_information* process_info = plist_find(&plist,thread_current()->pid);
-   process_info->status_code = status;
+   struct process_information* process = plist_find(&plist, thread_current()->pid);
+  process->alive = false;
+  process->status_code = status;
 }
 
 /* Print a list of all running processes. The list shall include all
@@ -72,7 +73,7 @@ start_process(struct parameters_to_start_process* parameters) NO_RETURN;
    Returns the new process's thread id, or TID_ERROR if the thread
    cannot be created. */
 int
-process_execute (const char *command_line) 
+process_execute (const char *command_line)                                                                                     //Process execute
 {
    //struct semaphore temp_process_sema;
 
@@ -148,7 +149,7 @@ void *setup_main_stack_asm(const char *command_line, void *esp);
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (struct parameters_to_start_process* parameters)
+start_process (struct parameters_to_start_process* parameters)                                                          //Start process
 {
   
   /* The last argument passed to thread_create is received here... */
@@ -261,7 +262,7 @@ start_process (struct parameters_to_start_process* parameters)
    This function will be implemented last, after a communication
    mechanism between parent and child is established. */
 int
-process_wait (int child_id) 
+process_wait (int child_id)                                                                                     //Process wait
 {
   int status = -1;
   struct thread *cur = thread_current ();
@@ -305,7 +306,7 @@ void cleanup_children(pid_t key, struct process_information* child, int parent_i
   }
 }
 void
-process_cleanup (void)
+process_cleanup (void)                                                                                    //Process cleanup
 {
   struct thread  *cur = thread_current ();
   uint32_t       *pd  = cur->pagedir;

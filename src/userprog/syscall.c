@@ -51,12 +51,10 @@ static void sys_halt(void)
 }
 static void sys_exit(int status)
 {
-  // printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
-  // printf("Status: %d\n", status);
-  // process_exit(status);
-  struct process_information* process = plist_find(&plist, thread_current()->pid);
-  process->alive = false;
-  process->status_code = status;
+   printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
+   printf("Status: %d\n", status);
+   process_exit(status);
+  
   thread_exit();
   return;
 }

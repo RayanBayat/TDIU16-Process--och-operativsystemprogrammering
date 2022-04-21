@@ -26,17 +26,15 @@ pid_t plist_insert(struct plist* p, struct process_information* value)
 
 struct process_information* plist_find(struct plist* p, const pid_t key)
 {
-    struct list_elem* current;
-    struct list_elem* end = list_end(&p->content);
+  
+     struct list_elem* curr = list_begin(&p->content);
+    struct list_elem* tail = list_end(&p->content);
 
-    for(current = list_begin(&p->content); 
-        current != end; 
-        current = list_next(current)) 
+    for(; curr != tail; curr = list_next(curr)) 
     {
-        struct p_association* a = list_entry(current, struct p_association, elem);
-
-        if(key == a->key) 
-            return a->value;
+        struct p_association* tmp = list_entry(curr, struct p_association, elem);
+       if(key == tmp->key) 
+            return tmp->value;
     }
     return NULL;
 }
@@ -45,20 +43,18 @@ struct process_information* plist_remove(struct plist* p, const pid_t key)
 {
     lock_acquire(&plist_lock);
 
-    struct list_elem* current;
-    struct list_elem* end = list_end(&p->content);
+    struct list_elem* curr = list_begin(&p->content);
+    struct list_elem* tail = list_end(&p->content);
 
-    for(current = list_begin(&p->content); 
-        current != end; 
-        current = list_next(current)) 
+    for(; curr != tail; curr = list_next(curr)) 
     {
-        struct p_association* a = list_entry(current, struct p_association, elem);
+        struct p_association* tmp = list_entry(curr, struct p_association, elem);
 
-        if(key == a->key) 
+       if(key == tmp->key) 
         {
-            struct process_information* value = a->value;
-            list_remove(current);
-            free(a);
+            struct process_information* value = tmp->value;
+            list_remove(curr);
+            free(tmp);
             lock_release(&plist_lock);
             return value;
         }
@@ -72,15 +68,14 @@ void plist_for_each(struct plist* p, void (*exec)(pid_t, struct process_informat
   
     lock_acquire(&plist_lock);
     
-    struct list_elem* current;
-    struct list_elem* end = list_end(&p->content);
+    struct list_elem* curr = list_begin(&p->content);
+    struct list_elem* tail = list_end(&p->content);
 
-    for(current = list_begin(&p->content); 
-        current != end; 
-        current = list_next(current)) 
+    for(; curr != tail; curr = list_next(curr)) 
     {
-        struct p_association* a = list_entry(current, struct p_association, elem);
-        (*exec)(a->key, a->value, aux);
+         struct p_association* tmp = list_entry(curr, struct p_association, elem);
+
+        (*exec)(tmp->key, tmp->value, aux);
     }
     lock_release(&plist_lock);
 }
@@ -100,22 +95,20 @@ void plist_printf(struct plist* p)
 void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_information*, int aux), int aux)
 {
     lock_acquire(&plist_lock);
-    struct list_elem* current = list_begin(&p->content);
-    struct list_elem* end = list_end(&p->content);
+    struct list_elem* curr = list_begin(&p->content);
+    struct list_elem* tail = list_end(&p->content);
 
-    while(current != end)
+    while(curr != tail)
     {
-        struct p_association* a = list_entry(current, struct p_association, elem);
-        bool to_remove = (*cond)(a->key, a->value, aux);
-
-        if(to_remove)
+        struct p_association* tmp = list_entry(curr, struct p_association, elem);
+        if((*cond)(tmp->key, tmp->value, aux))
         {
-            current = list_remove(current);
-            free(a);
+            curr = list_remove(curr);
+            free(tmp);
         }
         else
         {
-            list_next(current);
+            list_next(curr);
         }
     }
     lock_release(&plist_lock);
