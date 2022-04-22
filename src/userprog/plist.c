@@ -77,7 +77,7 @@ void plist_for_each(struct plist* p, void (*exec)(pid_t, struct process_informat
 
         (*exec)(tmp->key, tmp->value, aux);
     }
-    lock_release(&plist_lock);
+        lock_release(&plist_lock);
 }
 
 static void print_value_struct(pid_t key, struct process_information* value, int aux UNUSED)

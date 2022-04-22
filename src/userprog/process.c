@@ -43,6 +43,8 @@ void process_init(void)                                                         
 void process_exit(int status UNUSED)                                                                                    //Process exit
 {
    struct process_information* process = plist_find(&plist, thread_current()->pid);
+   if(process == NULL)
+     printf("du har fel\n");
   process->alive = false;
   process->status_code = status;
 }
@@ -100,14 +102,14 @@ process_execute (const char *command_line)                                      
 
   strlcpy_first_word (debug_name, command_line, 64);
   
+      sema_init(&arguments.process_sema,0);
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
                              (thread_func*)start_process, &arguments);
 
-      sema_init(&arguments.process_sema,0);
    if (thread_id == TID_ERROR)
    {
-      
+     //return -1;
       sema_up(&arguments.process_sema);
    }
    
@@ -217,6 +219,8 @@ start_process (struct parameters_to_start_process* parameters)                  
 
 //    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
    
+  } else {
+       parameters->process_to_start_success = false;
   }
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
@@ -239,7 +243,6 @@ start_process (struct parameters_to_start_process* parameters)                  
  
   if ( ! success )
   {
-   parameters->process_to_start_success = false;
     thread_exit ();
   }
   
@@ -269,15 +272,15 @@ process_wait (int child_id)                                                     
 
   debug("%s#%d: process_wait(%d) ENTERED\n",
         cur->name, cur->tid, child_id);
-  /* Yes! You need to do something good here ! */
-   struct process_information* process = plist_find(&plist,child_id);
+  //  Yes! You need to do something good here !
+  /*  struct process_information* process = plist_find(&plist,child_id); */
 
-    if(process != NULL)
-  {
-     sema_down(&process->pro_sema);
-     status = process -> status_code;
-  }
-  plist_remove(&plist,child_id);
+  /*   if(process != NULL) */
+  /* { */
+  /*    sema_down(&process->pro_sema); */
+  /*    status = process -> status_code; */
+  /* } */
+  /* plist_remove(&plist,child_id); */
 
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
         cur->name, cur->tid, child_id, status);
@@ -296,14 +299,19 @@ process_wait (int child_id)                                                     
    or initialized to something sane, or else that any such situation
    is detected.
 */
-void cleanup_children(pid_t key, struct process_information* child, int parent_id)
+bool cleanup_children(pid_t key, struct process_information* child, int parent_id)
 {
   if (child->parent == (pid_t)parent_id)
   {
     child->parent_alive = false;
     if(!child->alive)
-      plist_remove(&plist, key);
+      {
+      // plist_remove(&plist, key);
+      return true;
+      }
+    
   }
+  return false;
 }
 void
 process_cleanup (void)                                                                                    //Process cleanup
@@ -311,7 +319,7 @@ process_cleanup (void)                                                          
   struct thread  *cur = thread_current ();
   uint32_t       *pd  = cur->pagedir;
   int status = -1;
-  struct process_information* this_process = plist_find(&plist, cur->pid);
+   struct process_information* this_process = plist_find(&plist, cur->pid);
   
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
   
@@ -357,7 +365,8 @@ process_cleanup (void)                                                          
      else
      {
         this_process->alive = false;
-        plist_for_each(&plist,cleanup_children,cur->pid);
+         plist_remove_if(&plist,cleanup_children,cur->pid);
+         
      }
      
      sema_up(&this_process->pro_sema);
