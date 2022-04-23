@@ -103,14 +103,16 @@ process_execute (const char *command_line)                                      
   strlcpy_first_word (debug_name, command_line, 64);
   
       sema_init(&arguments.process_sema,0);
+
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
                              (thread_func*)start_process, &arguments);
 
    if (thread_id == TID_ERROR)
    {
-     //return -1;
-      sema_up(&arguments.process_sema);
+    
+      //sema_up(&arguments.process_sema);
+       return -1;
    }
    
    
@@ -219,7 +221,9 @@ start_process (struct parameters_to_start_process* parameters)                  
 
 //    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
    
-  } else {
+  } 
+  else 
+  {
        parameters->process_to_start_success = false;
   }
 
@@ -273,14 +277,14 @@ process_wait (int child_id)                                                     
   debug("%s#%d: process_wait(%d) ENTERED\n",
         cur->name, cur->tid, child_id);
   //  Yes! You need to do something good here !
-  /*  struct process_information* process = plist_find(&plist,child_id); */
+    struct process_information* process = plist_find(&plist,child_id); 
 
-  /*   if(process != NULL) */
-  /* { */
-  /*    sema_down(&process->pro_sema); */
-  /*    status = process -> status_code; */
-  /* } */
-  /* plist_remove(&plist,child_id); */
+     if(process != NULL) 
+   { 
+      sema_down(&process->pro_sema); 
+      status = process -> status_code; 
+   } 
+   plist_remove(&plist,child_id); 
 
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
         cur->name, cur->tid, child_id, status);
@@ -299,19 +303,34 @@ process_wait (int child_id)                                                     
    or initialized to something sane, or else that any such situation
    is detected.
 */
-bool cleanup_children(pid_t key, struct process_information* child, int parent_id)
+bool erase(key_t k UNUSED, struct process_information* child, int aux UNUSED)
+{
+    //debug("# list size: %d\n",process_list_size(&plist));
+  if (child->alive == false && child->parent_alive == false){
+    // printf("gick fel 1 \n");
+    return true;//ta bort ur listan både p_alive och parent_alive döda
+  }
+   else if(process_list_size(&plist) == 1 && child->parent_alive == true && child->alive == false)
+   {
+      // printf("gick fel 2 \n");
+     return true;
+   }
+
+return false;
+}
+void cleanup_children(pid_t key UNUSED, struct process_information* child, int parent_id)
 {
   if (child->parent == (pid_t)parent_id)
   {
     child->parent_alive = false;
-    if(!child->alive)
-      {
-      // plist_remove(&plist, key);
-      return true;
-      }
+   //  if(!child->alive)
+   //    {
+   //    plist_remove(&plist, key);
+   //    return true;
+   //    }
     
   }
-  return false;
+ // return false;
 }
 void
 process_cleanup (void)                                                                                    //Process cleanup
@@ -365,8 +384,10 @@ process_cleanup (void)                                                          
      else
      {
         this_process->alive = false;
-         plist_remove_if(&plist,cleanup_children,cur->pid);
-         
+        plist_for_each(&plist,cleanup_children,cur->pid);
+        
+      plist_remove_if(&plist,erase,cur->pid);
+     
      }
      
      sema_up(&this_process->pro_sema);

@@ -10,7 +10,7 @@
    The following is strongly recommended:
 
    - A function that given process inforamtion (up to you to create)
-     inserts this in a list of running processes and return an integer
+     inserts p in a list of running processes and return an integer
      that can be used to find the information later on.
 
    - A function that given an integer (obtained from above function)
@@ -72,7 +72,8 @@ struct process_information* plist_remove(struct plist*, const pid_t);
 void plist_printf(struct plist*);
 
 void plist_for_each(struct plist*, void (*exec)(pid_t, struct process_information*, int aux), int aux);
-void plist_remove_if(struct plist* this, bool (*cond)(pid_t, struct process_information*, int aux), int aux);
-void plist_remove_all(struct plist* this);
+void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_information*, int aux), int aux);
+void plist_remove_all(struct plist* p);
+size_t process_list_size(struct plist* p);
 
 #endif

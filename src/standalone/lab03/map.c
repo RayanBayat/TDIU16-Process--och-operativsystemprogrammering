@@ -90,3 +90,19 @@ void map_remove_if(struct map* m, bool (*cond)(key_t, value_t, int aux), int aux
         }
     }
 }
+
+void map_print(struct map* m)
+{
+   struct list_elem* curr = list_begin(&m->content);
+    struct list_elem* tail = list_end(&m->content);
+
+
+    while(curr != tail)
+    {
+        struct association* tmp = list_entry(curr, struct association, elem);
+        printf("values d%\n",(int)tmp->value);
+            curr = list_next(curr);
+        
+    }
+}
+

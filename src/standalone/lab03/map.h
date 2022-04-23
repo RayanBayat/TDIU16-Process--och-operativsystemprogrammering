@@ -28,3 +28,4 @@ value_t map_remove(struct map*, const key_t);
 
 void map_for_each(struct map*, void (*exec)(key_t, value_t, int aux), int aux);
 void map_remove_if(struct map* this, bool (*cond)(key_t, value_t, int aux), int aux);
+void map_print(struct map* m);

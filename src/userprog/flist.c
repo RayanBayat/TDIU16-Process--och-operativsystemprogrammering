@@ -90,7 +90,7 @@ void map_remove_if(struct map* m, bool (*cond)(key_t, value_t, int aux), int aux
         }
         else
         {
-            list_next(curr);
+           curr = list_next(curr);
         }
     }
 }

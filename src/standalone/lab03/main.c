@@ -80,7 +80,7 @@ int main()
     obj = my_strdup(input_buffer);
     id = map_insert(&container, obj);
   }
-
+  map_print(&container);
   /* remember to test with invalid keys (like 4711, or -1) */
   for ( i = 0; i < LOOPS; ++i)
   {

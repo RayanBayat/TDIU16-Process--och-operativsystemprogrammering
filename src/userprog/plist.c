@@ -10,6 +10,12 @@ void plist_init(struct plist* p)
     lock_init(&plist_lock);
     p->next_key = 1;
 }
+static void print_value_struct(pid_t key, struct process_information* value, int aux UNUSED)
+{
+    printf("PROCESS ID: %d\nName: %s\nParent ID: %d\nstatus_code: %d\nparent_alive: %d\nalive: %d\n", 
+            key, value->name, value->parent, value->status_code, value->parent_alive, value->alive);
+    printf("-----------------------------------------------\n");
+}
 
 pid_t plist_insert(struct plist* p, struct process_information* value)
 {
@@ -52,6 +58,7 @@ struct process_information* plist_remove(struct plist* p, const pid_t key)
 
        if(key == tmp->key) 
         {
+        //     print_value_struct(tmp->key,tmp->value,2);
             struct process_information* value = tmp->value;
             list_remove(curr);
             free(tmp);
@@ -59,6 +66,7 @@ struct process_information* plist_remove(struct plist* p, const pid_t key)
             return value;
         }
     }
+   //  printf("removed\n");
     lock_release(&plist_lock);
     return NULL;
 }
@@ -80,12 +88,7 @@ void plist_for_each(struct plist* p, void (*exec)(pid_t, struct process_informat
         lock_release(&plist_lock);
 }
 
-static void print_value_struct(pid_t key, struct process_information* value, int aux UNUSED)
-{
-    printf("PROCESS ID: %d\nName: %s\nParent ID: %d\nstatus_code: %d\nparent_alive: %d\nalive: %d\n", 
-            key, value->name, value->parent, value->status_code, value->parent_alive, value->alive);
-    printf("-----------------------------------------------\n");
-}
+
 
 void plist_printf(struct plist* p)
 {
@@ -97,18 +100,31 @@ void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_informa
     lock_acquire(&plist_lock);
     struct list_elem* curr = list_begin(&p->content);
     struct list_elem* tail = list_end(&p->content);
-
     while(curr != tail)
     {
+    //  for(; curr != tail; curr = list_next(curr)) 
+    // {
+        // if (a >= process_list_size(p))
+        // {
+        //     break;
+        // }
+       
         struct p_association* tmp = list_entry(curr, struct p_association, elem);
+       // printf("pos = %d\n",tmp->key);
+        //print_value_struct(tmp->key,tmp->value,aux);
         if((*cond)(tmp->key, tmp->value, aux))
         {
+           
+          //  printf("removed\n");
             curr = list_remove(curr);
             free(tmp);
+           
         }
         else
         {
-            list_next(curr);
+         //   printf("numbers %d\n",curr->next);
+            curr = list_next(curr);
+            
         }
     }
     lock_release(&plist_lock);
@@ -128,4 +144,8 @@ static bool do_free(pid_t k UNUSED, struct process_information* v, int aux UNUSE
 void plist_remove_all(struct plist* p)
 {
     plist_remove_if(p, do_free, 0);
+}
+size_t process_list_size(struct plist* p)
+{
+  return list_size(&p->content);
 }
