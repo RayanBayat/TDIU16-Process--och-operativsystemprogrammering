@@ -32,16 +32,19 @@ pid_t plist_insert(struct plist* p, struct process_information* value)
 
 struct process_information* plist_find(struct plist* p, const pid_t key)
 {
-  
+   lock_acquire(&plist_lock);
      struct list_elem* curr = list_begin(&p->content);
     struct list_elem* tail = list_end(&p->content);
-
+    
     for(; curr != tail; curr = list_next(curr)) 
     {
         struct p_association* tmp = list_entry(curr, struct p_association, elem);
-       if(key == tmp->key) 
+       if(key == tmp->key) {
+       lock_release(&plist_lock);
             return tmp->value;
     }
+    }
+    lock_release(&plist_lock);
     return NULL;
 }
 
@@ -102,19 +105,12 @@ void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_informa
     struct list_elem* tail = list_end(&p->content);
     while(curr != tail)
     {
-    //  for(; curr != tail; curr = list_next(curr)) 
-    // {
-        // if (a >= process_list_size(p))
-        // {
-        //     break;
-        // }
        
         struct p_association* tmp = list_entry(curr, struct p_association, elem);
        // printf("pos = %d\n",tmp->key);
         //print_value_struct(tmp->key,tmp->value,aux);
-        if((*cond)(tmp->key, tmp->value, aux))
+        if((bool)(*cond)(tmp->key, tmp->value, aux))
         {
-           
           //  printf("removed\n");
             curr = list_remove(curr);
             free(tmp);
@@ -123,8 +119,7 @@ void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_informa
         else
         {
          //   printf("numbers %d\n",curr->next);
-            curr = list_next(curr);
-            
+            curr = list_next(curr);     
         }
     }
     lock_release(&plist_lock);

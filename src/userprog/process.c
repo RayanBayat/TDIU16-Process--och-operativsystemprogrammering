@@ -44,7 +44,7 @@ void process_exit(int status UNUSED)                                            
 {
    struct process_information* process = plist_find(&plist, thread_current()->pid);
    if(process == NULL)
-     printf("du har fel\n");
+     printf("null error\n");
   process->alive = false;
   process->status_code = status;
 }
@@ -53,6 +53,7 @@ void process_exit(int status UNUSED)                                            
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
+   plist_printf(&plist);
 }
 
 
@@ -308,7 +309,7 @@ bool erase(key_t k UNUSED, struct process_information* child, int aux UNUSED)
     //debug("# list size: %d\n",process_list_size(&plist));
   if (child->alive == false && child->parent_alive == false){
     // printf("gick fel 1 \n");
-    return true;//ta bort ur listan både p_alive och parent_alive döda
+    return true;
   }
    else if(process_list_size(&plist) == 1 && child->parent_alive == true && child->alive == false)
    {
@@ -322,15 +323,8 @@ void cleanup_children(pid_t key UNUSED, struct process_information* child, int p
 {
   if (child->parent == (pid_t)parent_id)
   {
-    child->parent_alive = false;
-   //  if(!child->alive)
-   //    {
-   //    plist_remove(&plist, key);
-   //    return true;
-   //    }
-    
+    child->parent_alive = false;   
   }
- // return false;
 }
 void
 process_cleanup (void)                                                                                    //Process cleanup
