@@ -270,7 +270,7 @@ start_process (struct parameters_to_start_process* parameters)                  
    This function will be implemented last, after a communication
    mechanism between parent and child is established. */
 int
-process_wait (int child_id)                                                                                     //Process wait
+process_wait (int child_id)     //hgh                                                                                //Process wait
 {
   int status = -1;
   struct thread *cur = thread_current ();
@@ -304,7 +304,7 @@ process_wait (int child_id)                                                     
    or initialized to something sane, or else that any such situation
    is detected.
 */
-bool erase(key_t k UNUSED, struct process_information* child, int aux UNUSED)
+bool erase(pid_t k UNUSED, struct process_information* child, int aux UNUSED)
 {
     //debug("# list size: %d\n",process_list_size(&plist));
   if (child->alive == false && child->parent_alive == false){
@@ -378,9 +378,8 @@ process_cleanup (void)                                                          
      else
      {
         this_process->alive = false;
-        plist_for_each(&plist,cleanup_children,cur->pid);
-        
-      plist_remove_if(&plist,erase,cur->pid);
+        plist_for_each(&plist,cleanup_children,cur->pid);  
+          plist_remove_if(&plist,erase,cur->pid);
      
      }
      
