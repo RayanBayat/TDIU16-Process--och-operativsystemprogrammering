@@ -75,14 +75,18 @@ void data_close(struct data_file *file) {
  * att kunna testa bättre.
  */
 
+// Semaphore to ensure that the integers are not used after they are freed.
+struct semaphore data_sema;
 
 void thread_main(int *file_id) {
   struct data_file *f = data_open(*file_id);
   printf("Data: %s\n", f->data);
   data_close(f);
+  sema_up(&data_sema);
 }
 
 int main(void) {
+  sema_init(&data_sema, 0);
   data_init();
 
   int zero = 0;
@@ -91,6 +95,10 @@ int main(void) {
   thread_new(&thread_main, &one);
 
   thread_main(&zero);
+
+  // Wait for other threads to be done.
+  for (int i = 0; i < 3; i++)
+    sema_down(&data_sema);
 
   return 0;
 }

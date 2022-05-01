@@ -43,28 +43,28 @@ const int argc[] = {
   2, 1,    1, 1, 2, 1, 1,
   /* extended, you may need to change the order of these two (plist, sleep) */
   0, 1
-};
-static void sys_halt(void)
-{
-  printf("System Call Halt\n");
-  power_off();
-}
-static void sys_exit(int status)
-{
-   printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
-   printf("Status: %d\n", status);
-   process_exit(status);
-  
-  thread_exit();
-  return;
-}
-static void
-syscall_handler (struct intr_frame *f) 
-{
+  };
+  static void sys_halt(void)
+  {
+    printf("System Call Halt\n");
+    power_off();
+  }
+  static void sys_exit(int status)
+  {
+    printf("System Call Exit: thread: %s#%d\n", thread_name(), thread_tid());
+    printf("Status: %d\n", status);
+    process_exit(status);
+    
+    thread_exit();
+    return;
+  }
+  static void
+  syscall_handler (struct intr_frame *f) 
+  {
 
 
-  int32_t* esp = (int32_t*)f->esp;
-  //printf("esp[0] = %d\n", esp[0]);
+    int32_t* esp = (int32_t*)f->esp;
+    //printf("esp[0] = %d\n", esp[0]);
   switch ( esp[0]/* retrive syscall number */ )
   {
     case SYS_EXEC:
