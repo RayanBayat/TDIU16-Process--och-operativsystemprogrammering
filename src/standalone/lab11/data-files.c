@@ -16,8 +16,9 @@ struct data_file {
 
   // Data i filen.
   char *data;
+  struct lock lock1;
 };
-
+struct lock lock;
 // Håll koll på den fil vi har öppnat. Om ingen fil är öppen är denna variabel NULL.
 // Tänk er att detta är en array av två pekare, dvs. struct data_file *open_files[2];
 struct data_file **open_files;
@@ -25,45 +26,60 @@ struct data_file **open_files;
 // Initiera de datastrukturer vi behöver. Anropas en gång i början.
 void data_init(void) NO_STEP {
   open_files = malloc(sizeof(struct data_file *)*2);
+  lock_init(&lock);
 }
 
 // Öppna datafilen med nummer "file" och se till att den finns i RAM. Om den
 // redan råkar vara öppnad ger funktionen tillbaka en pekare till instansen som
 // redan var öppen. Annars laddas filen in i RAM.
 struct data_file *data_open(int file) {
+
+   lock_acquire(&lock);
   struct data_file *result = open_files[file];
+ // struct data_file tmpresult = *result;
+ 
   if (result == NULL) {
     // Skapa en ny data_file.
     result = malloc(sizeof(struct data_file));
     result->open_count = 0;
     result->id = file;
-
+     lock_init(&result->lock1);
+   
+  
+ 
+ 
     // Simulera att vi läser in data...
     timer_msleep(100);
     if (file == 0)
       result->data = strdup("File 0");
     else
       result->data = strdup("File 1");
-
-    // Spara data i "open_files".
-    open_files[file] = result;
+      open_files[file] = result;
   }
-
+   
+    // Spara data i "open_files".
+    lock_acquire(&result->lock1);
   result->open_count++;
-
+ lock_release(&result->lock1);
+  lock_release(&lock);
   return result;
 }
 
 // Stäng en datafil. Om ingen annan har filen öppen ska filen avallokeras för
 // att spara minne.
 void data_close(struct data_file *file) {
+  lock_acquire(&lock);
+   lock_acquire(&file->lock1);
   int open_count = --file->open_count;
+   lock_release(&file->lock1);
   if (open_count <= 0) {
     // Ingen har filen öppen längre. Då kan vi ta bort den!
     open_files[file->id] = NULL;
     free(file->data);
     free(file);
+
   }
+  lock_release(&lock);
 }
 
 
