@@ -44,7 +44,7 @@ struct data_file *data_open(int file) {
     result->open_count = 0;
     result->id = file;
      lock_init(&result->lock1);
-   
+    printf("file created\n");
   
  
  
@@ -52,9 +52,10 @@ struct data_file *data_open(int file) {
     timer_msleep(100);
     if (file == 0)
       result->data = strdup("File 0");
-    else
+    else{
       result->data = strdup("File 1");
       open_files[file] = result;
+    }
   }
    
     // Spara data i "open_files".
@@ -77,6 +78,7 @@ void data_close(struct data_file *file) {
     open_files[file->id] = NULL;
     free(file->data);
     free(file);
+    printf("file closed\n");
 
   }
   lock_release(&lock);
