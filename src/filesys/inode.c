@@ -40,6 +40,10 @@ struct inode
     bool removed;                       /* True if deleted, false otherwise. */
     struct inode_disk data;             /* Inode content. */
     struct lock inode_lock;
+
+    struct lock r_w_lock;        
+    struct condition r_w_cond;   
+    unsigned r_cnd;
   };
 
 
@@ -153,6 +157,10 @@ inode_open (disk_sector_t sector)
   lock_init(&inode->inode_lock);
 
 
+  lock_init(&inode->r_w_lock);
+  cond_init(&inode->r_w_cond);
+  inode->r_cnd = 0;
+
   disk_read (filesys_disk, inode->sector, &inode->data);
   
   lock_release(&i_l_lock);
@@ -231,13 +239,16 @@ inode_remove (struct inode *inode)
 off_t
 inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset) 
 {
+  lock_acquire(&inode->r_w_lock);
+  inode->r_cnd++;
+  lock_release(&inode->r_w_lock);
   uint8_t *buffer = buffer_;
   off_t bytes_read = 0;
   uint8_t *bounce = NULL;
   
   while (size > 0) 
     {
-      timer_msleep(2);//
+     // timer_msleep(2);//
       /* Disk sector to read, starting byte offset within sector. */
       disk_sector_t sector_idx = byte_to_sector (inode, offset);
       int sector_ofs = offset % DISK_SECTOR_SIZE;
@@ -278,6 +289,10 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
     }
   free (bounce);
 
+   lock_acquire(&inode->r_w_lock);
+  inode->r_cnd--;
+  cond_signal(&inode->r_w_cond, &inode->r_w_lock);
+  lock_release(&inode->r_w_lock);
   return bytes_read;
 }
 
@@ -294,10 +309,14 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
   off_t bytes_written = 0;
   uint8_t *bounce = NULL;
 
+  lock_acquire(&inode->r_w_lock);
+
+  while(inode->r_cnd > 0)
+    cond_wait(&inode->r_w_cond, &inode->r_w_lock);
     
   while (size > 0) 
     {
-      timer_msleep(2);
+    //  timer_msleep(2);
       /* Sector to write, starting byte offset within sector. */
       disk_sector_t sector_idx = byte_to_sector (inode, offset);
       int sector_ofs = offset % DISK_SECTOR_SIZE;
@@ -345,6 +364,7 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
     }
   free (bounce);
 
+ lock_release(&inode->r_w_lock);
   return bytes_written;
 }
 
