@@ -18,13 +18,24 @@
  *
  *  gcc -Wall -Wextra -std=gnu99 -pedantic -m32 -g pagedir.o verify_adr.c
  */
-#error Read comment above and then remove this line.
+//#error Read comment above and then remove this line.
 
 /* Verify all addresses from and including 'start' up to but excluding
  * (start+length). */
 bool verify_fix_length(void* start, unsigned length)
 {
-  // ADD YOUR CODE HERE
+	void *cur, *end;
+	end = (void*)((unsigned)start + length);
+	cur = pg_round_down(start);
+
+	while(cur < end)
+	{
+		if(pagedir_get_page(thread_current()->pagedir, cur) == NULL)
+			return false;
+
+		cur = (void*)((unsigned)cur + PGSIZE); /* GOTO next page */
+	}
+	return true;
 }
 
 /* Verify all addresses from and including 'start' up to and including
@@ -33,7 +44,26 @@ bool verify_fix_length(void* start, unsigned length)
  */
 bool verify_variable_length(char* start)
 {
-  // ADD YOUR CODE HERE
+
+  if(pagedir_get_page(thread_current()->pagedir, start) == NULL)
+    return false;
+ 
+  char *cur = start;
+
+  while(!is_end_of_string(cur))
+  {
+    unsigned prev_pg = pg_no(cur++);
+
+
+    if(pg_no(cur) != prev_pg)
+     {
+
+      if(pagedir_get_page(thread_current()->pagedir, cur) == NULL)
+        return false;
+     }
+  }
+
+  return true;
 }
 
 /* Definition of test cases. */

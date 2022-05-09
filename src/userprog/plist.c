@@ -3,6 +3,7 @@
 #include "plist.h"
 
 static struct lock plist_lock;
+struct plist Process_List;
 
 void plist_init(struct plist* p) 
 {

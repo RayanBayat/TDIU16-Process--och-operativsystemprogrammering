@@ -35,6 +35,9 @@
 #include "filesys/fsutil.h"
 #endif
 
+
+//extern struct plist Process_List;
+
 /* Amount of physical memory, in 4 kB pages. */
 size_t ram_pages;
 
@@ -130,7 +133,7 @@ main (void)
   disk_init ();
   filesys_init (format_filesys);
 #endif
-
+ // plist_init(&Process_List);
   printf ("Boot complete.\n");
   
   /* Run actions specified on kernel command line. */

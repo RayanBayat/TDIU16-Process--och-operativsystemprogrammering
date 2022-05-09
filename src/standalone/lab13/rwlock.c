@@ -35,7 +35,7 @@ struct inode
 {
   // Our representation of the data on disk - a single integer.
   int data;
-  struct lock read_write_lock;        /* Lock for inode write/read */
+  struct lock r_w_lock;        /* Lock for inode write/read */
   struct condition read_write_cond;
   int reader_cnt;
   // Add any other members you need for your readers-writers lock here.
@@ -49,7 +49,7 @@ struct inode *inode_open(void) NO_STEP
   node->data = 0;
 
   // Any other initialization...
-  lock_init(&node->read_write_lock);
+  lock_init(&node->r_w_lock);
   cond_init(&node->read_write_cond);
   node->reader_cnt = 0;
   return node;
@@ -67,18 +67,18 @@ void inode_close(struct inode *inode)
 // take an offset into consideration.
 void inode_read_at(struct inode *inode, int *output)
 {
-  lock_acquire(&inode->read_write_lock);
+  lock_acquire(&inode->r_w_lock);
   inode->reader_cnt++;
-  lock_release(&inode->read_write_lock);
+  lock_release(&inode->r_w_lock);
   // This is the simplified version of the code that reads data in the
   // implementation in Pintos. This is enough to trigger appropriate messages in
   // the visualization tool. Add your rw-lock before and after.
  
   *output = inode->data;
-    lock_acquire(&inode->read_write_lock);
+    lock_acquire(&inode->r_w_lock);
   inode->reader_cnt--;
-  cond_signal(&inode->read_write_cond,&inode->read_write_lock);
-  lock_release(&inode->read_write_lock);
+  cond_signal(&inode->read_write_cond,&inode->r_w_lock);
+  lock_release(&inode->r_w_lock);
   
 }
 
@@ -87,17 +87,17 @@ void inode_read_at(struct inode *inode, int *output)
 void inode_write_at(struct inode *inode, int *input)
 {
 
-lock_acquire(&inode->read_write_lock);
+lock_acquire(&inode->r_w_lock);
   // This is the simplified version of the code that writes data in the
   // implementation in Pintos. This is enough to trigger appropriate messages in
   // the visualization tool. Add your rw-lock before and after.
   while (inode->reader_cnt > 0)
   {
-    cond_wait(&inode->read_write_cond,&inode->read_write_lock);
+    cond_wait(&inode->read_write_cond,&inode->r_w_lock);
   }
   
   inode->data = *input;
-  lock_release(&inode->read_write_lock);
+  lock_release(&inode->r_w_lock);
 }
 
 
