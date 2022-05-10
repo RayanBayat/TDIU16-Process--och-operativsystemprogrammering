@@ -1,6 +1,7 @@
 #include <stddef.h>
 
 #include "plist.h"
+#include "process.h"
 
 static struct lock plist_lock;
 struct plist Process_List;
@@ -144,4 +145,30 @@ void plist_remove_all(struct plist* p)
 size_t process_list_size(struct plist* p)
 {
   return list_size(&p->content);
+}
+
+
+int process_wait_process_find(struct plist* p, const pid_t key)
+{
+   
+ lock_acquire(&plist_lock);
+  int status = -1;
+     struct list_elem* curr = list_begin(&p->content);
+    struct list_elem* tail = list_end(&p->content);
+    
+    for(; curr != tail; curr = list_next(curr)) 
+    {
+        struct p_association* tmp = list_entry(curr, struct p_association, elem);
+       if(key == tmp->key) {
+            if(tmp->value != NULL) 
+            { 
+                sema_down(&tmp->value->pro_sema); 
+                status = tmp->value -> status_code; 
+            } 
+            lock_release(&plist_lock);
+            return status;
+    }
+    }
+    lock_release(&plist_lock);
+    return status;
 }

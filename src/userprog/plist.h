@@ -75,5 +75,5 @@ void plist_for_each(struct plist*, void (*exec)(pid_t, struct process_informatio
 void plist_remove_if(struct plist* p, bool (*cond)(pid_t, struct process_information*, int aux), int aux);
 void plist_remove_all(struct plist* p);
 size_t process_list_size(struct plist* p);
-
+int process_wait_process_find(struct plist* p, const pid_t key);
 #endif

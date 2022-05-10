@@ -278,13 +278,14 @@ process_wait (int child_id)     //hgh                                           
   debug("%s#%d: process_wait(%d) ENTERED\n",
         cur->name, cur->tid, child_id);
   //  Yes! You need to do something good here !
-    struct process_information* process = plist_find(&plist,child_id); 
+  //  struct process_information* process = plist_find(&plist,child_id); 
 
-     if(process != NULL) 
-   { 
-      sema_down(&process->pro_sema); 
-      status = process -> status_code; 
-   } 
+   status = process_wait_process_find(&plist,child_id);
+   //   if(process != NULL) 
+   // { 
+   //    sema_down(&process->pro_sema); 
+   //    status = process -> status_code; 
+   // } 
    plist_remove(&plist,child_id); 
 
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
