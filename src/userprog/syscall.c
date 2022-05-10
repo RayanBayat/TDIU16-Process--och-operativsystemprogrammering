@@ -73,9 +73,16 @@ const int argc[] = {
    {
     sys_exit(-1);
    }
+   if(!verify_fix_length(esp, sizeof(int32_t*)))
+       sys_exit(-1);
+   
     if(esp[0] > SYS_NUMBER_OF_CALLS || esp[0] < 0)
-    sys_exit(-1);
-
+      {
+        sys_exit(-1);
+      }
+    
+    
+    
   if(!verify_fix_length(esp, sizeof(char*) * (argc[esp[0]] + 1)))
     sys_exit(-1); 
 
